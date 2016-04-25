@@ -1,4 +1,4 @@
-#include "gps_agent_pkg/pr2plugin.h"
+#include "gps_agent_pkg/baxterplugin.h"
 #include "gps_agent_pkg/positioncontroller.h"
 #include "gps_agent_pkg/trialcontroller.h"
 #include "gps_agent_pkg/encodersensor.h"
@@ -7,7 +7,7 @@
 namespace gps_control {
 
 // Plugin constructor.
-GPSPR2Plugin::GPSPR2Plugin()
+GPSBAXTERPlugin::GPSBAXTERPlugin()
 {
     // Some basic variable initialization.
     controller_counter_ = 0;
@@ -15,13 +15,13 @@ GPSPR2Plugin::GPSPR2Plugin()
 }
 
 // Destructor.
-GPSPR2Plugin::~GPSPR2Plugin()
+GPSBAXTERPlugin::~GPSBAXTERPlugin()
 {
     // Nothing to do here, since all instance variables are destructed automatically.
 }
 
 // Initialize the object and store the robot state.
-bool GPSPR2Plugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHandle& n)
+bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHandle& n)
 {
     // Variables.
     std::string root_name, active_tip_name, passive_tip_name;
@@ -147,7 +147,7 @@ bool GPSPR2Plugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHandle&
 }
 
 // This is called by the controller manager before starting the controller.
-void GPSPR2Plugin::starting()
+void GPSBAXTERPlugin::starting()
 {
     // Get current time.
     last_update_time_ = robot_->getTime();
@@ -170,13 +170,13 @@ void GPSPR2Plugin::starting()
 }
 
 // This is called by the controller manager before stopping the controller.
-void GPSPR2Plugin::stopping()
+void GPSBAXTERPlugin::stopping()
 {
     // Nothing to do here.
 }
 
 // This is the main update function called by the realtime thread when the controller is running.
-void GPSPR2Plugin::update()
+void GPSBAXTERPlugin::update()
 {
     // Get current time.
     last_update_time_ = robot_->getTime();
@@ -201,13 +201,13 @@ void GPSPR2Plugin::update()
 }
 
 // Get current time.
-ros::Time GPSPR2Plugin::get_current_time() const
+ros::Time GPSBAXTERPlugin::get_current_time() const
 {
     return last_update_time_;
 }
 
 // Get current encoder readings (robot-dependent).
-void GPSPR2Plugin::get_joint_encoder_readings(Eigen::VectorXd &angles, gps::ActuatorType arm) const
+void GPSBAXTERPlugin::get_joint_encoder_readings(Eigen::VectorXd &angles, gps::ActuatorType arm) const
 {
     if (arm == gps::AUXILIARY_ARM)
     {
@@ -232,7 +232,7 @@ void GPSPR2Plugin::get_joint_encoder_readings(Eigen::VectorXd &angles, gps::Actu
 }
 
 // Register controller to pluginlib
-PLUGINLIB_DECLARE_CLASS(gps_agent_pkg, GPSPR2Plugin,
-						gps_control::GPSPR2Plugin,
+PLUGINLIB_DECLARE_CLASS(gps_agent_pkg, GPSBAXTERPlugin,
+						gps_control::GPSBAXTERPlugin,
 						pr2_controller_interface::Controller)
 

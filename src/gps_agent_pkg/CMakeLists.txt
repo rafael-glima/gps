@@ -43,6 +43,7 @@ rosbuild_add_boost_directories()
 
 set(DDP_FILES src/robotplugin.cpp
               src/pr2plugin.cpp
+              src/baxterplugin.cpp
               src/sample.cpp
               src/sensor.cpp
               src/neuralnetwork.cpp

@@ -2,4 +2,7 @@
   <class name="gps_agent_pkg/GPSPR2Plugin"
          type="gps_control::GPSPR2Plugin"
          base_class_type="pr2_controller_interface::Controller" />
+	<class name="gps_agent_pkg/GPSBAXTERPlugin"
+	     type="gps_control::GPSBAXTERPlugin"
+	     base_class_type="pr2_controller_interface::Controller" />
 </library>
