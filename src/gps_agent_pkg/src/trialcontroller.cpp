@@ -38,7 +38,7 @@ void TrialController::update(RobotPlugin *plugin, ros::Time current_time, boost:
     // Update last update time.
     last_update_time_ = current_time;
     step_counter_++;
-    ROS_INFO("Step counter: %d", step_counter_);
+    // ROS_INFO("Step counter: %d", step_counter_);
 }
 
 void TrialController::configure_controller(OptionsMap &options)

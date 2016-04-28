@@ -23,6 +23,8 @@ GPSBAXTERPlugin::~GPSBAXTERPlugin()
 // Initialize the object and store the robot state.
 bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHandle& n)
 {
+    // ROS_INFO_STREAM("baxterplugin initialization called with robot: ");
+
     // Variables.
     std::string root_name, active_tip_name, passive_tip_name;
 
@@ -87,6 +89,7 @@ bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHand
         // Push back the joint state and name.
         pr2_mechanism_model::JointState* jointState = robot_->getJointState(joint_name);
         active_arm_joint_state_.push_back(jointState);
+        ROS_INFO_STREAM("jointState name: " + joint_name + "and jointState: ");
         if (jointState == NULL)
             ROS_INFO_STREAM("jointState: " + joint_name + " is null");
 
@@ -194,7 +197,13 @@ void GPSBAXTERPlugin::update()
 
     // Store the torques.
     for (unsigned i = 0; i < active_arm_joint_state_.size(); i++)
+    {
         active_arm_joint_state_[i]->commanded_effort_ = active_arm_torques_[i];
+        std::ostringstream strs;
+        strs << active_arm_torques_[i];
+        std::string str = strs.str();
+        ROS_INFO_STREAM("a torque value: " + str);
+    }
 
     for (unsigned i = 0; i < passive_arm_joint_state_.size(); i++)
         passive_arm_joint_state_[i]->commanded_effort_ = passive_arm_torques_[i];
