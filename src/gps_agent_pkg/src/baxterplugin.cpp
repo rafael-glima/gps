@@ -3,6 +3,12 @@
 #include "gps_agent_pkg/trialcontroller.h"
 #include "gps_agent_pkg/encodersensor.h"
 #include "gps_agent_pkg/util.h"
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include "sensor_msgs/JointState.h"
+
+// ros::spin();
+
 
 namespace gps_control {
 
@@ -140,6 +146,11 @@ bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHand
     active_arm_torques_.resize(active_arm_fk_chain_.getNrOfJoints());
     passive_arm_torques_.resize(passive_arm_fk_chain_.getNrOfJoints());
 
+    // Subscribe to the joint states
+    // ros::Subscriber sub = n.subscribe("joint_states", 1000, chatterCallback);
+    
+
+
     // Initialize ROS subscribers/publishers, sensors, and position controllers.
     // Note that this must be done after the FK solvers are created, because the sensors
     // will ask to use these FK solvers!
@@ -170,6 +181,7 @@ void GPSBAXTERPlugin::starting()
 
     // Reset trial controller, if any.
     if (trial_controller_ != NULL) trial_controller_->reset(last_update_time_);
+
 }
 
 // This is called by the controller manager before stopping the controller.
@@ -199,10 +211,10 @@ void GPSBAXTERPlugin::update()
     for (unsigned i = 0; i < active_arm_joint_state_.size(); i++)
     {
         active_arm_joint_state_[i]->commanded_effort_ = active_arm_torques_[i];
-        std::ostringstream strs;
-        strs << active_arm_torques_[i];
-        std::string str = strs.str();
-        ROS_INFO_STREAM("a torque value: " + str);
+    //     std::ostringstream strs;
+    //     strs << active_arm_torques_[i];
+    //     std::string str = strs.str();
+    //     ROS_INFO_STREAM("a torque value: " + str);
     }
 
     for (unsigned i = 0; i < passive_arm_joint_state_.size(); i++)

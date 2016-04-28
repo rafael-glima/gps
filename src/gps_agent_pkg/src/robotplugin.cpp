@@ -11,6 +11,7 @@
 #include "gps_agent_pkg/util.h"
 #include "gps/proto/gps.pb.h"
 #include <vector>
+#include "sensor_msgs/JointState.h"
 
 #ifdef USE_CAFFE
 #include "gps_agent_pkg/caffenncontroller.h"
@@ -60,6 +61,7 @@ void RobotPlugin::initialize(ros::NodeHandle& n)
 void RobotPlugin::initialize_ros(ros::NodeHandle& n)
 {
     ROS_INFO_STREAM("Initializing ROS subs/pubs");
+    joint_state_sub = n.subscribe("/joint_states", 1, &RobotPlugin::joint_state_callback, this);
     // Create subscribers.
     position_subscriber_ = n.subscribe("/gps_controller_position_command", 1, &RobotPlugin::position_subscriber_callback, this);
     trial_subscriber_ = n.subscribe("/gps_controller_trial_command", 1, &RobotPlugin::trial_subscriber_callback, this);
@@ -112,10 +114,9 @@ void RobotPlugin::initialize_sensors(ros::NodeHandle& n)
 }
 
 
-// Helper method to configure all sensors
+// Helper method to configure all sensors 
 void RobotPlugin::configure_sensors(OptionsMap &opts)
 {
-    ROS_INFO("configure sensors");
     sensors_initialized_ = false;
     for (int i = 0; i < sensors_.size(); i++)
     {
@@ -290,6 +291,11 @@ void RobotPlugin::publish_sample_report(boost::scoped_ptr<Sample>& sample, int T
         }
     }
     report_publisher_->unlockAndPublish();
+}
+
+void RobotPlugin::joint_state_callback(const sensor_msgs::JointStateConstPtr& joint_state)
+{
+  ROS_INFO_STREAM("I am getting called");
 }
 
 void RobotPlugin::position_subscriber_callback(const gps_agent_pkg::PositionCommand::ConstPtr& msg){
