@@ -94,3 +94,10 @@ MUJOCO_LOG.TXT
 experiments/*/data_files/
 experiments/*/log.txt
 .previous_experiment
+
+# Catkin development (Ethan added)
+.idea/
+devel/
+src/gps_agent_pkg/catkin/
+src/gps_agent_pkg/catkin_generated/
+src/gps_agent_pkg/devel/

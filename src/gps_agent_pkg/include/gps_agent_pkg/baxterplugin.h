@@ -10,6 +10,7 @@ This is the PR2-specific version of the robot plugin.
 #include <pr2_mechanism_model/robot.h>
 #include <Eigen/Dense>
 #include <pluginlib/class_list_macros.h>
+#include "sensor_msgs/JointState.h"
 
 // Superclass.
 #include "gps_agent_pkg/robotplugin.h"
@@ -24,6 +25,7 @@ namespace gps_control
 class GPSBAXTERPlugin: public RobotPlugin, public pr2_controller_interface::Controller
 {
 private:
+    float right_arm_joint_states [7];
     // PR2-specific chain object necessary to construct the KDL chain.
     pr2_mechanism_model::Chain passive_arm_chain_, active_arm_chain_;
     // This is a pointer to the robot state, which we get when initialized and have to keep after that.
@@ -42,6 +44,9 @@ private:
     int controller_counter_;
     // Length of controller steps in ms.
     int controller_step_length_;
+    // Subscribers
+    // Subscriber for joint states.
+    ros::Subscriber joint_states_subcriber_;
 public:
     // Constructor (this should do nothing).
     GPSBAXTERPlugin();
@@ -72,6 +77,8 @@ public:
     virtual ros::Time get_current_time() const;
     // Get current encoder readings (robot-dependent).
     virtual void get_joint_encoder_readings(Eigen::VectorXd &angles, gps::ActuatorType arm) const;
+    // Baxter specific subscriber callbacks
+    virtual void joint_states_subscriber_callback(const sensor_msgs::JointStateConstPtr& joint_state);
 };
 
 }

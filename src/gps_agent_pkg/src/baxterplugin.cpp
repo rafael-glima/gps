@@ -5,7 +5,7 @@
 #include "gps_agent_pkg/util.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "sensor_msgs/JointState.h"
+#include <typeinfo>
 
 // ros::spin();
 
@@ -154,6 +154,7 @@ bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHand
     // Initialize ROS subscribers/publishers, sensors, and position controllers.
     // Note that this must be done after the FK solvers are created, because the sensors
     // will ask to use these FK solvers!
+    joint_states_subcriber_ = n.subscribe("/joint_states", 1, &GPSBAXTERPlugin::joint_states_subscriber_callback, this);
     initialize(n);
 
     // Tell the PR2 controller manager that we initialized everything successfully.
@@ -211,10 +212,13 @@ void GPSBAXTERPlugin::update()
     for (unsigned i = 0; i < active_arm_joint_state_.size(); i++)
     {
         active_arm_joint_state_[i]->commanded_effort_ = active_arm_torques_[i];
-    //     std::ostringstream strs;
-    //     strs << active_arm_torques_[i];
-    //     std::string str = strs.str();
-    //     ROS_INFO_STREAM("a torque value: " + str);
+        std::ostringstream strs;
+        strs << active_arm_joint_state_[i]->position_;
+        std::string str = strs.str();
+        float gps = active_arm_joint_state_[i]->position_;
+        float topic = right_arm_joint_states[i];
+        ROS_INFO("Index: %u position from gps: %f position from topic: %f difference between positions: %f",
+            i, gps, topic, gps-topic);
     }
 
     for (unsigned i = 0; i < passive_arm_joint_state_.size(); i++)
@@ -248,6 +252,21 @@ void GPSBAXTERPlugin::get_joint_encoder_readings(Eigen::VectorXd &angles, gps::A
     {
         ROS_ERROR("Unknown ArmType %i requested for joint encoder readings!",arm);
     }
+}
+
+void GPSBAXTERPlugin::joint_states_subscriber_callback(const sensor_msgs::JointStateConstPtr& joint_states)
+{
+    std::ostringstream positions;
+    // map the indices correctly... this was painstaking to find. 
+    unsigned index_map [7] = {2,0,1,4,3,5,6};
+    for (unsigned i = 0; i < 7; i++)
+    {
+        right_arm_joint_states[index_map[i]] = joint_states->position[i+31];
+    }
+
+    // std::vector<int> v(x, x + sizeof x / sizeof x[0]);
+
+  // ROS_INFO("I am getting called, and my position type is: %6.4lf", right_arm_joint_states[1]);
 }
 
 }

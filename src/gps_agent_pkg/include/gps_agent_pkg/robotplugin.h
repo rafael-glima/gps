@@ -28,7 +28,6 @@ with the robot.
 #include "gps_agent_pkg/controller.h"
 #include "gps_agent_pkg/positioncontroller.h"
 #include "gps/proto/gps.pb.h"
-#include "sensor_msgs/JointState.h"
 
 // Convenience defines.
 #define ros_publisher_ptr(X) boost::scoped_ptr<realtime_tools::RealtimePublisher<X> >
@@ -81,8 +80,6 @@ protected:
     // KDL solvers for end-effector Jacobians.
     boost::shared_ptr<KDL::ChainJntToJacSolver> passive_arm_jac_solver_, active_arm_jac_solver_;
     // Subscribers.
-    // Subscriber for position.
-    ros::Subscriber joint_state_sub;
     // Subscriber for position control commands.
     ros::Subscriber position_subscriber_;
     // Subscriber trial commands.
@@ -131,7 +128,6 @@ public:
     virtual void publish_sample_report(boost::scoped_ptr<Sample>& sample, int T=1);
 
     // Subscriber callbacks.
-    virtual void joint_state_callback(const sensor_msgs::JointStateConstPtr& joint_state);
     // Position command callback.
     virtual void position_subscriber_callback(const gps_agent_pkg::PositionCommand::ConstPtr& msg);
     // Trial command callback.
