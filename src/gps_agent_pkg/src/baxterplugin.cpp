@@ -212,13 +212,14 @@ void GPSBAXTERPlugin::update()
     for (unsigned i = 0; i < active_arm_joint_state_.size(); i++)
     {
         active_arm_joint_state_[i]->commanded_effort_ = active_arm_torques_[i];
-        std::ostringstream strs;
-        strs << active_arm_joint_state_[i]->position_;
-        std::string str = strs.str();
-        float gps = active_arm_joint_state_[i]->position_;
-        float topic = right_arm_joint_states[i];
+        float gps_position = active_arm_joint_state_[i]->position_;
+        float topic_position = right_arm_joint_positions[i];
         ROS_INFO("Index: %u position from gps: %f position from topic: %f difference between positions: %f",
-            i, gps, topic, gps-topic);
+            i, gps_position, topic_position, gps_position-topic_position);
+        float gps_torque = active_arm_joint_state_[i]->measured_effort_;
+        float topic_torque = right_arm_joint_torques[i];
+        ROS_INFO("Index: %u torque from gps: %f torque from topic: %f difference between torques: %f",
+            i, gps_torque, topic_torque, gps_torque-topic_torque);
     }
 
     for (unsigned i = 0; i < passive_arm_joint_state_.size(); i++)
@@ -261,7 +262,8 @@ void GPSBAXTERPlugin::joint_states_subscriber_callback(const sensor_msgs::JointS
     unsigned index_map [7] = {2,0,1,4,3,5,6};
     for (unsigned i = 0; i < 7; i++)
     {
-        right_arm_joint_states[index_map[i]] = joint_states->position[i+31];
+        right_arm_joint_positions[index_map[i]] = joint_states->position[i+31];
+        right_arm_joint_torques[index_map[i]] = joint_states->effort[i+31];
     }
 
     // std::vector<int> v(x, x + sizeof x / sizeof x[0]);
