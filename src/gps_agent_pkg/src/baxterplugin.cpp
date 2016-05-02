@@ -134,7 +134,7 @@ bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHand
         joint_index++;
     }
     // Validate that the number of joints in the chain equals the length of the active arm joint state.
-    if (passive_arm_fk_chain_.getNrOfJoints() != passive_arm_joint_state_.size())
+    if (passive_arm_fk_chain_.getNrOfJoints() != sizeof(passive_arm_joint_state_))
     {
         ROS_INFO_STREAM("num_fk_chain: " + to_string(passive_arm_fk_chain_.getNrOfJoints()));
         ROS_INFO_STREAM("num_joint_state: " + to_string(passive_arm_joint_state_.size()));
@@ -213,11 +213,11 @@ void GPSBAXTERPlugin::update()
     {
         active_arm_joint_state_[i]->commanded_effort_ = active_arm_torques_[i];
         float gps_position = active_arm_joint_state_[i]->position_;
-        float topic_position = right_arm_joint_positions[i];
+        float topic_position = left_arm_joint_positions[i];
         ROS_INFO("Index: %u position from gps: %f position from topic: %f difference between positions: %f",
             i, gps_position, topic_position, gps_position-topic_position);
         float gps_torque = active_arm_joint_state_[i]->measured_effort_;
-        float topic_torque = right_arm_joint_torques[i];
+        float topic_torque = left_arm_joint_torques[i];
         ROS_INFO("Index: %u torque from gps: %f torque from topic: %f difference between torques: %f",
             i, gps_torque, topic_torque, gps_torque-topic_torque);
     }
@@ -237,17 +237,17 @@ void GPSBAXTERPlugin::get_joint_encoder_readings(Eigen::VectorXd &angles, gps::A
 {
     if (arm == gps::AUXILIARY_ARM)
     {
-        if (angles.rows() != passive_arm_joint_state_.size())
-            angles.resize(passive_arm_joint_state_.size());
+        if (angles.rows() != sizeof(right_arm_joint_positions))
+            angles.resize(sizeof(right_arm_joint_positions));
         for (unsigned i = 0; i < angles.size(); i++)
-            angles(i) = passive_arm_joint_state_[i]->position_;
+            angles(i) = right_arm_joint_positions[i];
     }
     else if (arm == gps::TRIAL_ARM)
     {
-        if (angles.rows() != active_arm_joint_state_.size())
-            angles.resize(active_arm_joint_state_.size());
+        if (angles.rows() != sizeof(left_arm_joint_positions))
+            angles.resize(sizeof(left_arm_joint_positions));
         for (unsigned i = 0; i < angles.size(); i++)
-            angles(i) = active_arm_joint_state_[i]->position_;
+            angles(i) = left_arm_joint_positions[i];
     }
     else
     {
@@ -262,13 +262,15 @@ void GPSBAXTERPlugin::joint_states_subscriber_callback(const sensor_msgs::JointS
     unsigned index_map [7] = {2,0,1,4,3,5,6};
     for (unsigned i = 0; i < 7; i++)
     {
-        right_arm_joint_positions[index_map[i]] = joint_states->position[i+31];
-        right_arm_joint_torques[index_map[i]] = joint_states->effort[i+31];
+        left_arm_joint_positions[index_map[i]] = joint_states->position[i+31];
+        left_arm_joint_torques[index_map[i]] = joint_states->effort[i+31];
+        right_arm_joint_positions[index_map[i]] = joint_states->position[i+17];
+        right_arm_joint_torques[index_map[i]] = joint_states->effort[i+17];
     }
 
     // std::vector<int> v(x, x + sizeof x / sizeof x[0]);
 
-  // ROS_INFO("I am getting called, and my position type is: %6.4lf", right_arm_joint_states[1]);
+  // ROS_INFO("I am getting called, and my position type is: %6.4lf", left_arm_joint_states[1]);
 }
 
 }

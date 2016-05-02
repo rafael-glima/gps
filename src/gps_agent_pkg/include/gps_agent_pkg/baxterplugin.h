@@ -25,6 +25,8 @@ namespace gps_control
 class GPSBAXTERPlugin: public RobotPlugin, public pr2_controller_interface::Controller
 {
 private:
+    float left_arm_joint_positions [7];
+    float left_arm_joint_torques [7];
     float right_arm_joint_positions [7];
     float right_arm_joint_torques [7];
     // PR2-specific chain object necessary to construct the KDL chain.
