@@ -134,7 +134,7 @@ bool GPSBAXTERPlugin::init(pr2_mechanism_model::RobotState* robot, ros::NodeHand
         joint_index++;
     }
     // Validate that the number of joints in the chain equals the length of the active arm joint state.
-    if (passive_arm_fk_chain_.getNrOfJoints() != sizeof(passive_arm_joint_state_))
+    if (passive_arm_fk_chain_.getNrOfJoints() != passive_arm_joint_state_.size())
     {
         ROS_INFO_STREAM("num_fk_chain: " + to_string(passive_arm_fk_chain_.getNrOfJoints()));
         ROS_INFO_STREAM("num_joint_state: " + to_string(passive_arm_joint_state_.size()));
