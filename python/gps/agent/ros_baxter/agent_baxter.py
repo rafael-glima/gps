@@ -111,7 +111,7 @@ class AgentBaxter(Agent):
         """
 
         print "in sample! on condition: " + str(condition)
-        print "baxter joint positions: " + str(self.baxter.get_baxter_joint_angles().items())
+        print "baxter returned joint positions: " + repr(self.baxter.get_baxter_joint_angles_positions())
 
         # Create new sample, populate first time step.
         new_sample = self._init_sample(condition)
@@ -164,9 +164,10 @@ class AgentBaxter(Agent):
                 for _ in range(self._hyperparams['substeps']):
 
                     # This is the call to mjcpy to set the robot
-                    # mj_X, _ = self._world[condition].step(mj_X, mj_U)
+                    mj_X, _ = self._world[condition].step(mj_X, mj_U)
                     self.baxter.set_baxter_joint_angles(mj_U)
-
+                    print 'here is mj_X: ', mj_X
+                    # mj_X = self.baxter.get_baxter_joint_angles()
 
 
 
@@ -237,8 +238,10 @@ class AgentBaxter(Agent):
         # print 'setting sample in timestep: ' + str(t) + 'and using joints of: ' + str(np.array(mj_X[self._joint_idx]))
 
 
-        sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
-        sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
+        # sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
+        sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=t+1)
+        # sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
+        sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=t+1)
         curr_eepts = self._data['site_xpos'].flatten()
         sample.set(END_EFFECTOR_POINTS, curr_eepts, t=t+1)
         prev_eepts = sample.get(END_EFFECTOR_POINTS, t=t)

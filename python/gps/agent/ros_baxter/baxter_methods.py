@@ -43,13 +43,28 @@ class BaxterMethods:
     def set_baxter_joint_angles(self, joint_angles_list):
         if len(joint_angles_list) != 7:
             print "The number of joint angles passed to baxter are: " + str(len(joint_angles_list))
-        joint_angles_dict = {}
-        for i in range(len(joint_angles_list)):
-            joint_angles_dict[baxter_joint_name_list[i]] = joint_angles_list[i]
-        self.limb.set_joint_positions(joint_angles_dict,True)
+        self.limb.set_joint_positions(baxter_list_to_dict(joint_angles_list),True)
 
-    def get_baxter_joint_angles(self):
-        observed_joint_angles = self.limb.joint_angles()
-        if len(observed_joint_angles) != 7:
-            print "The number of joint angles taken from baxter are: " + str(len(observed_joint_angles))
-        return observed_joint_angles
+    def get_baxter_joint_angles_positions(self):
+        observed_joint_angles_dict = self.limb.joint_angles()
+        if len(observed_joint_angles_dict) != 7:
+            print "The number of joint angles taken from baxter are: " + str(len(observed_joint_angles_dict))
+        return baxter_dict_to_list(observed_joint_angles_dict)
+
+    def get_baxter_joint_angles_velocities(self):
+        observed_joint_velocities_dict = self.limb.joint_velocities()
+        if len(observed_joint_velocities_dict) != 7:
+            print "The number of joint angles taken from baxter are: " + str(len(observed_joint_velocities_dict))
+        return baxter_dict_to_list(observed_joint_velocities_dict)
+
+def baxter_dict_to_list(dictionary):
+    joint_list = []
+    for i in range(len(baxter_joint_name_list)):
+        joint_list.append(dictionary[baxter_joint_name_list[i]])
+    return joint_list
+
+def baxter_list_to_dict(joint_list):
+    joint_dict = {}
+    for i in range(len(joint_list)):
+        joint_dict[baxter_joint_name_list[i]] = joint_list[i]
+    return joint_dict
