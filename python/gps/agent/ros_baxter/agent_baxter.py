@@ -7,7 +7,7 @@ import mjcpy
 
 from gps.agent.agent import Agent
 from gps.agent.agent_utils import generate_noise, setup
-from gps.agent.config import AGENT_MUJOCO
+from gps.agent.config import AGENT_BAXTER
 from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
         END_EFFECTOR_POINTS, END_EFFECTOR_POINT_VELOCITIES, \
         END_EFFECTOR_POINT_JACOBIANS, ACTION, RGB_IMAGE, RGB_IMAGE_SIZE, \
@@ -15,6 +15,7 @@ from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
 
 from gps.sample.sample import Sample
 
+import baxter_methods
 
 class AgentBaxter(Agent):
     """
@@ -22,11 +23,13 @@ class AgentBaxter(Agent):
     this class.
     """
     def __init__(self, hyperparams):
-        config = copy.deepcopy(AGENT_MUJOCO)
+        config = copy.deepcopy(AGENT_BAXTER)
         config.update(hyperparams)
         Agent.__init__(self, config)
         self._setup_conditions()
         self._setup_world(hyperparams['filename'])
+        self.baxter = baxter_methods.BaxterMethods()
+        self.baxter._setup_baxter_world()
 
     def _setup_conditions(self):
         """
@@ -37,6 +40,7 @@ class AgentBaxter(Agent):
         for field in ('x0', 'x0var', 'pos_body_idx', 'pos_body_offset',
                       'noisy_body_idx', 'noisy_body_var', 'filename'):
             self._hyperparams[field] = setup(self._hyperparams[field], conds)
+
 
     def _setup_world(self, filename):
         """
@@ -51,6 +55,7 @@ class AgentBaxter(Agent):
         # otherwise create a different world for each condition.
         if not isinstance(filename, list):
             self._world = mjcpy.MJCWorld(filename)
+            # This holds the xml model 
             self._model = self._world.get_model()
             self._world = [self._world
                            for _ in range(self._hyperparams['conditions'])]
@@ -89,8 +94,8 @@ class AgentBaxter(Agent):
 
         cam_pos = self._hyperparams['camera_pos']
         for i in range(self._hyperparams['conditions']):
-            self._world[i].init_viewer(AGENT_MUJOCO['image_width'],
-                                       AGENT_MUJOCO['image_height'],
+            self._world[i].init_viewer(AGENT_BAXTER['image_width'],
+                                       AGENT_BAXTER['image_height'],
                                        cam_pos[0], cam_pos[1], cam_pos[2],
                                        cam_pos[3], cam_pos[4], cam_pos[5])
 
@@ -104,33 +109,67 @@ class AgentBaxter(Agent):
             verbose: Whether or not to plot the trial.
             save: Whether or not to store the trial into the samples.
         """
+
+        print "in sample! on condition: " + str(condition)
+        print "baxter joint positions: " + str(self.baxter.get_baxter_joint_angles().items())
+
         # Create new sample, populate first time step.
         new_sample = self._init_sample(condition)
         mj_X = self._hyperparams['x0'][condition]
         U = np.zeros([self.T, self.dU])
         noise = generate_noise(self.T, self.dU, self._hyperparams)
+
+        # Not called
         if np.any(self._hyperparams['x0var'][condition] > 0):
             x0n = self._hyperparams['x0var'] * \
                     np.random.randn(self._hyperparams['x0var'].shape)
             mj_X += x0n
         noisy_body_idx = self._hyperparams['noisy_body_idx'][condition]
+
+        # Not called
         if noisy_body_idx.size > 0:
             for i in range(len(noisy_body_idx)):
                 idx = noisy_body_idx[i]
                 var = self._hyperparams['noisy_body_var'][condition][i]
+
+
                 self._model[condition]['body_pos'][idx, :] += \
                         var * np.random.randn(1, 3)
+
+
         self._world[condition].set_model(self._model[condition])
+
+
+
+
+
         for t in range(self.T):
             X_t = new_sample.get_X(t=t)
             obs_t = new_sample.get_obs(t=t)
+
+            # set the ACTION for the bot gotten from the policy calculations, and apply.
             mj_U = policy.act(X_t, obs_t, t, noise[t, :])
             U[t, :] = mj_U
+            
+            # print 'the action to take in step ' + str(t) + ' is: ' + str(mj_U) 
+
             if verbose:
+
+
                 self._world[condition].plot(mj_X)
+
+
+            # every step but the last
             if (t + 1) < self.T:
                 for _ in range(self._hyperparams['substeps']):
-                    mj_X, _ = self._world[condition].step(mj_X, mj_U)
+
+                    # This is the call to mjcpy to set the robot
+                    # mj_X, _ = self._world[condition].step(mj_X, mj_U)
+                    ethan=[]
+
+
+
+
                 #TODO: Some hidden state stuff will go here.
                 self._data = self._world[condition].get_data()
                 self._set_sample(new_sample, mj_X, t, condition)
@@ -193,6 +232,11 @@ class AgentBaxter(Agent):
             t: Time step to set for sample.
             condition: Which condition to set.
         """
+
+
+        # print 'setting sample in timestep: ' + str(t) + 'and using joints of: ' + str(np.array(mj_X[self._joint_idx]))
+
+
         sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
         sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
         curr_eepts = self._data['site_xpos'].flatten()
@@ -205,6 +249,8 @@ class AgentBaxter(Agent):
             idx = site * 3
             jac[idx:(idx+3), :] = self._world[condition].get_jac_site(site)
         sample.set(END_EFFECTOR_POINT_JACOBIANS, jac, t=t+1)
+
+
         if RGB_IMAGE in self.obs_data_types:
             img = self._world[condition].get_image_scaled(self._hyperparams['image_width'],
                                                           self._hyperparams['image_height'])

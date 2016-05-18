@@ -5,6 +5,8 @@ import numpy as np
 
 import mjcpy
 
+import json
+
 from gps.agent.agent import Agent
 from gps.agent.agent_utils import generate_noise, setup
 from gps.agent.config import AGENT_MUJOCO
@@ -27,6 +29,8 @@ class AgentMuJoCo(Agent):
         Agent.__init__(self, config)
         self._setup_conditions()
         self._setup_world(hyperparams['filename'])
+        print("hyperparams['filename']: " + hyperparams['filename'])
+        # hyperparams['filename']: ./mjc_models/pr2_arm3d.xml
 
     def _setup_conditions(self):
         """
@@ -38,6 +42,7 @@ class AgentMuJoCo(Agent):
                       'noisy_body_idx', 'noisy_body_var', 'filename'):
             self._hyperparams[field] = setup(self._hyperparams[field], conds)
 
+    # Won't need this for Baxter... the world is already setup... just need to read joint states
     def _setup_world(self, filename):
         """
         Helper method for handling setup of the MuJoCo world.

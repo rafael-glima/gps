@@ -34,6 +34,7 @@ def generate_noise(T, dU, hyperparams):
 
 def setup(value, n):
     """ Go through various types of hyperparameters. """
+    print 'incoming value: ' + str(value)
     if not isinstance(value, list):
         try:
             return [value.copy() for _ in range(n)]
