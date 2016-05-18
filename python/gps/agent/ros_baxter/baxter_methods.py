@@ -11,6 +11,9 @@ import baxter_external_devices
 
 from baxter_interface import CHECK_VERSION
 
+# Proposed joint name order of joint commands coming from the policy... not sure if this matters.
+baxter_joint_name_list = ['right_e0','right_s0','right_s1','right_w0','right_e1','right_w1','right_w2']
+
 class BaxterMethods:
 
     def __init__(self):
@@ -38,7 +41,15 @@ class BaxterMethods:
         print("Done.")
 
     def set_baxter_joint_angles(self, joint_angles_list):
+        if len(joint_angles_list) != 7:
+            print "The number of joint angles passed to baxter are: " + str(len(joint_angles_list))
+        joint_angles_dict = {}
+        for i in range(len(joint_angles_list)):
+            joint_angles_dict[baxter_joint_name_list[i]] = joint_angles_list[i]
         self.limb.set_joint_positions(joint_angles_dict,True)
 
     def get_baxter_joint_angles(self):
-        return self.limb.joint_angles()
+        observed_joint_angles = self.limb.joint_angles()
+        if len(observed_joint_angles) != 7:
+            print "The number of joint angles taken from baxter are: " + str(len(observed_joint_angles))
+        return observed_joint_angles

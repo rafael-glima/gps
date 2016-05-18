@@ -165,7 +165,7 @@ class AgentBaxter(Agent):
 
                     # This is the call to mjcpy to set the robot
                     # mj_X, _ = self._world[condition].step(mj_X, mj_U)
-                    ethan=[]
+                    self.baxter.set_baxter_joint_angles(mj_U)
 
 
 
