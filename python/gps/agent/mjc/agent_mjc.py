@@ -18,6 +18,12 @@ from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
 from gps.sample.sample import Sample
 
 
+# pose_1 = np.array( [ 0.0993603,   0.09783388, -1.54864531, -1.70595236,  1.58138453, -0.21367634,
+#  -0.00691512])
+
+# pose_1 = np.array([0.0]*6 + [0.1])
+
+
 class AgentMuJoCo(Agent):
     """
     All communication between the algorithms and MuJoCo is done through
@@ -135,10 +141,25 @@ class AgentMuJoCo(Agent):
                 self._world[condition].plot(mj_X)
             if (t + 1) < self.T:
                 for _ in range(self._hyperparams['substeps']):
+                   
+
                     mj_X, _ = self._world[condition].step(mj_X, mj_U)
+                    
+
+
+
+
                 #TODO: Some hidden state stuff will go here.
                 self._data = self._world[condition].get_data()
                 self._set_sample(new_sample, mj_X, t, condition)
+
+
+            # print 'timestep: ', t
+            # print 'here are joint positions: ', mj_X[self._joint_idx]
+            # print 'here are joint velocities: ', mj_X[self._vel_idx]
+
+
+
         new_sample.set(ACTION, U)
         if save:
             self._samples[condition].append(new_sample)
@@ -198,6 +219,15 @@ class AgentMuJoCo(Agent):
             t: Time step to set for sample.
             condition: Which condition to set.
         """
+
+        # print 'setting sample in timestep: ' + str(t) + 'and using joints of: ' + str(np.array(mj_X[self._joint_idx]))
+
+        # curr_eepts holds a point for each finger, as verified by a 
+        curr_eepts = self._data['site_xpos']
+        print 'curr_eepts: ', self._data['site_xpos']
+        print 'distance between curr_eepts', np.linalg.norm(curr_eepts[0]-curr_eepts[1])
+
+
         sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
         sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
         curr_eepts = self._data['site_xpos'].flatten()

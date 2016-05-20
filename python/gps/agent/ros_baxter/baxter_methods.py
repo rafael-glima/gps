@@ -45,6 +45,11 @@ class BaxterMethods:
             print "The number of joint angles passed to baxter are: " + str(len(joint_angles_list))
         self.limb.set_joint_positions(baxter_list_to_dict(joint_angles_list),True)
 
+    def set_baxter_joint_velocities(self, joint_angles_list):
+        if len(joint_angles_list) != 7:
+            print "The number of joint angles passed to baxter are: " + str(len(joint_angles_list))
+        self.limb.set_joint_velocities(baxter_list_to_dict(joint_angles_list))
+
     def get_baxter_joint_angles_positions(self):
         observed_joint_angles_dict = self.limb.joint_angles()
         if len(observed_joint_angles_dict) != 7:
@@ -56,6 +61,16 @@ class BaxterMethods:
         if len(observed_joint_velocities_dict) != 7:
             print "The number of joint angles taken from baxter are: " + str(len(observed_joint_velocities_dict))
         return baxter_dict_to_list(observed_joint_velocities_dict)
+
+    def get_baxter_end_effector_pose(self):
+        pose = self.limb.endpoint_pose()
+        return list(pose['position']) + list(pose['orientation'])[:3]
+
+    def get_baxter_end_effector_velocity(self):
+        pose = self.limb.endpoint_velocity()
+        return list(pose['linear']) + list(pose['angular'])
+
+
 
 def baxter_dict_to_list(dictionary):
     joint_list = []

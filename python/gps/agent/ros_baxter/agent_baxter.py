@@ -28,6 +28,9 @@ class AgentBaxter(Agent):
         Agent.__init__(self, config)
         self._setup_conditions()
         self._setup_world(hyperparams['filename'])
+
+
+
         self.baxter = baxter_methods.BaxterMethods()
         self.baxter._setup_baxter_world()
 
@@ -165,8 +168,16 @@ class AgentBaxter(Agent):
 
                     # This is the call to mjcpy to set the robot
                     mj_X, _ = self._world[condition].step(mj_X, mj_U)
-                    self.baxter.set_baxter_joint_angles(mj_U)
-                    print 'here is mj_X: ', mj_X
+
+                    # Set the baxter joint velocities through the Baxter API
+                    self.baxter.set_baxter_joint_velocities(mj_U)
+
+                    
+                    # mj_X[self._joint_idx] = self.baxter.get_baxter_joint_angles_positions()
+                    # mj_X[self._vel_idx] = self.baxter.get_baxter_joint_angles_velocities()
+
+
+                    # print 'here is mj_X: ', mj_X
                     # mj_X = self.baxter.get_baxter_joint_angles()
 
 
@@ -174,6 +185,8 @@ class AgentBaxter(Agent):
                 #TODO: Some hidden state stuff will go here.
                 self._data = self._world[condition].get_data()
                 self._set_sample(new_sample, mj_X, t, condition)
+
+
         new_sample.set(ACTION, U)
         if save:
             self._samples[condition].append(new_sample)
@@ -237,16 +250,33 @@ class AgentBaxter(Agent):
 
         # print 'setting sample in timestep: ' + str(t) + 'and using joints of: ' + str(np.array(mj_X[self._joint_idx]))
 
+        
 
-        # sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
+        # Baxter setting joint angles and velocities
         sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=t+1)
-        # sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
         sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=t+1)
+        sample.set(END_EFFECTOR_POINTS, self.baxter.get_baxter_end_effector_pose(), t=t+1)
+        sample.set(END_EFFECTOR_POINT_VELOCITIES, self.baxter.get_baxter_end_effector_velocity(), t=t+1)
+
+
+        # MuJoCo setting joint and angle velocities
+        # sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
+        # sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
+
         curr_eepts = self._data['site_xpos'].flatten()
-        sample.set(END_EFFECTOR_POINTS, curr_eepts, t=t+1)
-        prev_eepts = sample.get(END_EFFECTOR_POINTS, t=t)
-        eept_vels = (curr_eepts - prev_eepts) / self._hyperparams['dt']
-        sample.set(END_EFFECTOR_POINT_VELOCITIES, eept_vels, t=t+1)
+        
+        # sample.set(END_EFFECTOR_POINTS, curr_eepts, t=t+1)
+        # prev_eepts = sample.get(END_EFFECTOR_POINTS, t=t)
+
+
+        # print 'curr_eepts: ', self._data['site_xpos']
+        # print 'prev_eepts: ' , prev_eepts
+
+
+        # eept_vels = (curr_eepts - prev_eepts) / self._hyperparams['dt']
+        # sample.set(END_EFFECTOR_POINT_VELOCITIES, eept_vels, t=t+1)
+
+
         jac = np.zeros([curr_eepts.shape[0], self._model[condition]['nq']])
         for site in range(curr_eepts.shape[0] // 3):
             idx = site * 3

@@ -1,4 +1,4 @@
-""" Hyperparameters for MJC peg insertion trajectory optimization. """
+""" Hyperparameters for Baxter peg insertion trajectory optimization. """
 from __future__ import division
 
 from datetime import datetime
