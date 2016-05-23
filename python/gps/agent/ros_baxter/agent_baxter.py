@@ -167,7 +167,7 @@ class AgentBaxter(Agent):
                 for _ in range(self._hyperparams['substeps']):
 
                     # This is the call to mjcpy to set the robot
-                    mj_X, _ = self._world[condition].step(mj_X, mj_U)
+                    # mj_X, _ = self._world[condition].step(mj_X, mj_U)
 
                     # Set the baxter joint velocities through the Baxter API
                     self.baxter.set_baxter_joint_velocities(mj_U)
@@ -199,19 +199,37 @@ class AgentBaxter(Agent):
             condition: Which condition to initialize.
         """
         sample = Sample(self)
-        sample.set(JOINT_ANGLES,
-                   self._hyperparams['x0'][condition][self._joint_idx], t=0)
-        sample.set(JOINT_VELOCITIES,
-                   self._hyperparams['x0'][condition][self._vel_idx], t=0)
-        self._data = self._world[condition].get_data()
-        eepts = self._data['site_xpos'].flatten()
-        sample.set(END_EFFECTOR_POINTS, eepts, t=0)
-        sample.set(END_EFFECTOR_POINT_VELOCITIES, np.zeros_like(eepts), t=0)
-        jac = np.zeros([eepts.shape[0], self._model[condition]['nq']])
-        for site in range(eepts.shape[0] // 3):
-            idx = site * 3
-            jac[idx:(idx+3), :] = self._world[condition].get_jac_site(site)
-        sample.set(END_EFFECTOR_POINT_JACOBIANS, jac, t=0)
+
+        # sample.set(JOINT_ANGLES,
+        #            self._hyperparams['x0'][condition][self._joint_idx], t=0)
+        # sample.set(JOINT_VELOCITIES,
+        #            self._hyperparams['x0'][condition][self._vel_idx], t=0)
+        # self._data = self._world[condition].get_data()
+
+        # eepts = self._data['site_xpos'].flatten()
+        # sample.set(END_EFFECTOR_POINTS, eepts, t=0)
+        # sample.set(END_EFFECTOR_POINT_VELOCITIES, np.zeros_like(eepts), t=0)
+
+        # Baxter setting joint angles and velocities
+        sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=0)
+        sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=0)
+        sample.set(END_EFFECTOR_POINTS, np.array(self.baxter.get_baxter_end_effector_pose() + [0]*3), t=0)
+        sample.set(END_EFFECTOR_POINT_VELOCITIES, np.array(self.baxter.get_baxter_end_effector_velocity()), t=0)
+        sample.set(END_EFFECTOR_POINT_JACOBIANS, np.array(self.baxter.get_baxter_end_effector_jacobian()), t=0)
+        
+
+
+        # eepts = np.zeros(6)
+        # jac = np.zeros([eepts.shape[0], self._model[condition]['nq']])
+
+        # for site in range(eepts.shape[0] // 3):
+        #     idx = site * 3
+        #     jac[idx:(idx+3), :] = self._world[condition].get_jac_site(site)
+
+        # sample.set(END_EFFECTOR_POINT_JACOBIANS, jac, t=0)
+
+
+        
 
         # save initial image to meta data
         self._world[condition].plot(self._hyperparams['x0'][condition])
@@ -255,15 +273,16 @@ class AgentBaxter(Agent):
         # Baxter setting joint angles and velocities
         sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=t+1)
         sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=t+1)
-        sample.set(END_EFFECTOR_POINTS, self.baxter.get_baxter_end_effector_pose(), t=t+1)
+        sample.set(END_EFFECTOR_POINTS, self.baxter.get_baxter_end_effector_pose() + [0]*3, t=t+1)
         sample.set(END_EFFECTOR_POINT_VELOCITIES, self.baxter.get_baxter_end_effector_velocity(), t=t+1)
+        sample.set(END_EFFECTOR_POINT_JACOBIANS, np.array(self.baxter.get_baxter_end_effector_jacobian()), t=t+1)
 
 
         # MuJoCo setting joint and angle velocities
         # sample.set(JOINT_ANGLES, np.array(mj_X[self._joint_idx]), t=t+1)
         # sample.set(JOINT_VELOCITIES, np.array(mj_X[self._vel_idx]), t=t+1)
 
-        curr_eepts = self._data['site_xpos'].flatten()
+        # curr_eepts = self._data['site_xpos'].flatten()
         
         # sample.set(END_EFFECTOR_POINTS, curr_eepts, t=t+1)
         # prev_eepts = sample.get(END_EFFECTOR_POINTS, t=t)
@@ -277,11 +296,11 @@ class AgentBaxter(Agent):
         # sample.set(END_EFFECTOR_POINT_VELOCITIES, eept_vels, t=t+1)
 
 
-        jac = np.zeros([curr_eepts.shape[0], self._model[condition]['nq']])
-        for site in range(curr_eepts.shape[0] // 3):
-            idx = site * 3
-            jac[idx:(idx+3), :] = self._world[condition].get_jac_site(site)
-        sample.set(END_EFFECTOR_POINT_JACOBIANS, jac, t=t+1)
+        # jac = np.zeros([curr_eepts.shape[0], self._model[condition]['nq']])
+        # for site in range(curr_eepts.shape[0] // 3):
+        #     idx = site * 3
+        #     jac[idx:(idx+3), :] = self._world[condition].get_jac_site(site)
+        # sample.set(END_EFFECTOR_POINT_JACOBIANS, jac, t=t+1)
 
 
         if RGB_IMAGE in self.obs_data_types:

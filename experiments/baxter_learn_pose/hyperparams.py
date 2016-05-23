@@ -51,7 +51,7 @@ agent = {
     'type': AgentBaxter,
     'filename': './mjc_models/pr2_arm3d.xml',
     'x0': np.concatenate([np.array([0.1, 0.1, -1.54, -1.7, 1.54, -0.2, 0]),
-                          np.zeros(7)]),
+                          np.zeros(1+SENSOR_DIMS[END_EFFECTOR_POINTS])]),
     'dt': 0.05,
     'substeps': 5,
     'conditions': common['conditions'],
@@ -92,8 +92,8 @@ torque_cost = {
 
 fk_cost = {
     'type': CostFK,
-    'target_end_effector': np.array([0.0, 0.3, -0.5, 0.0, 0.3, -0.2]),
-    'wp': np.array([1, 1, 1, 1, 1, 1]),
+    'target_end_effector': np.array([0.0, 0.3, -0.5]+[0,0,0]),
+    'wp': np.ones(SENSOR_DIMS[END_EFFECTOR_POINTS]),
     'l1': 0.1,
     'l2': 10.0,
     'alpha': 1e-5,

@@ -10,6 +10,8 @@ import baxter_interface
 import baxter_external_devices
 
 from baxter_interface import CHECK_VERSION
+from baxter_pykdl import baxter_kinematics
+
 
 # Proposed joint name order of joint commands coming from the policy... not sure if this matters.
 baxter_joint_name_list = ['right_e0','right_s0','right_s1','right_w0','right_e1','right_w1','right_w2']
@@ -19,6 +21,7 @@ class BaxterMethods:
     def __init__(self):
         self._setup_baxter_world()
         self.limb = baxter_interface.Limb('right')
+        self.kin = baxter_kinematics('right')
 
     def _setup_baxter_world(self):
         print("Initializing node... ")
@@ -64,11 +67,14 @@ class BaxterMethods:
 
     def get_baxter_end_effector_pose(self):
         pose = self.limb.endpoint_pose()
-        return list(pose['position']) + list(pose['orientation'])[:3]
+        return list(pose['position'])# + list(pose['orientation'])[:3]
 
     def get_baxter_end_effector_velocity(self):
         pose = self.limb.endpoint_velocity()
         return list(pose['linear']) + list(pose['angular'])
+
+    def get_baxter_end_effector_jacobian(self):
+        return self.kin.jacobian()
 
 
 
