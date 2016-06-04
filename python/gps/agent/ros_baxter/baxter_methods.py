@@ -54,7 +54,8 @@ class BaxterMethods:
         self.limb.set_joint_velocities(baxter_list_to_dict(joint_angles_list))
 
     def set_baxter_joint_positions(self, joint_angles_list):
-        self.move_to_joint_positions(joint_angles_list)
+        joint_dict = baxter_list_to_dict(joint_angles_list)
+        self.limb.move_to_joint_positions(joint_dict)
 
     def get_baxter_joint_angles_positions(self):
         observed_joint_angles_dict = self.limb.joint_angles()

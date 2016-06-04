@@ -154,6 +154,9 @@ class AgentBaxter(Agent):
 
         # self._world[condition].set_model(self._model[condition])
 
+        self.baxter.set_baxter_joint_positions([0]*7)
+
+
 
 
 

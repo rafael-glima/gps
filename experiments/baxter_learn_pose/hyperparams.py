@@ -16,7 +16,8 @@ from gps.algorithm.dynamics.dynamics_prior_gmm import DynamicsPriorGMM
 from gps.algorithm.traj_opt.traj_opt_lqr_python import TrajOptLQRPython
 from gps.algorithm.policy.lin_gauss_init import init_lqr
 from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
-        END_EFFECTOR_POINTS, END_EFFECTOR_POINT_VELOCITIES, ACTION
+        END_EFFECTOR_POINTS, END_EFFECTOR_POINT_VELOCITIES, ACTION, \
+        TRIAL_ARM, AUXILIARY_ARM, JOINT_SPACE
 from gps.gui.config import generate_experiment_info
 
 SENSOR_DIMS = {
@@ -66,6 +67,13 @@ agent = {
                       END_EFFECTOR_POINT_VELOCITIES],
     'obs_include': [],
     'camera_pos': np.array([0., 0., 2., 0., 0.2, 0.5]),
+}
+
+reset_ccondition = {
+    TRIAL_ARM: {
+        'mode': JOINT_SPACE,
+        'data': agent['x0'][:7]
+    }
 }
 
 algorithm = {
