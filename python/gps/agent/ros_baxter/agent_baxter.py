@@ -3,7 +3,7 @@ import copy
 
 import numpy as np
 
-import mjcpy
+# import mjcpy
 
 from gps.agent.agent import Agent
 from gps.agent.agent_utils import generate_noise, setup
@@ -27,12 +27,24 @@ class AgentBaxter(Agent):
         config.update(hyperparams)
         Agent.__init__(self, config)
         self._setup_conditions()
-        self._setup_world(hyperparams['filename'])
+        # self._setup_world(hyperparams['filename'])
 
 
 
         self.baxter = baxter_methods.BaxterMethods()
         self.baxter._setup_baxter_world()
+        self.set_initial_state()
+
+    def set_initial_state(self):
+        self.x0 = []
+        for i in range(self._hyperparams['conditions']):
+            if END_EFFECTOR_POINTS in self.x_data_types:
+                eepts = np.array(self.baxter.get_baxter_end_effector_pose()).flatten()
+                self.x0.append(
+                    np.concatenate([self._hyperparams['x0'][i], eepts, np.zeros_like(eepts)])
+                )
+            else:
+                self.x0.append(self._hyperparams['x0'][i])
 
     def _setup_conditions(self):
         """
@@ -140,7 +152,7 @@ class AgentBaxter(Agent):
                         var * np.random.randn(1, 3)
 
 
-        self._world[condition].set_model(self._model[condition])
+        # self._world[condition].set_model(self._model[condition])
 
 
 
@@ -156,10 +168,8 @@ class AgentBaxter(Agent):
             
             # print 'the action to take in step ' + str(t) + ' is: ' + str(mj_U) 
 
-            if verbose:
-
-
-                self._world[condition].plot(mj_X)
+            # if verbose:
+            #     self._world[condition].plot(mj_X)
 
 
             # every step but the last
@@ -183,7 +193,7 @@ class AgentBaxter(Agent):
 
 
                 #TODO: Some hidden state stuff will go here.
-                self._data = self._world[condition].get_data()
+                # self._data = self._world[condition].get_data()
                 self._set_sample(new_sample, mj_X, t, condition)
 
 
@@ -213,7 +223,7 @@ class AgentBaxter(Agent):
         # Baxter setting joint angles and velocities
         sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=0)
         sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=0)
-        sample.set(END_EFFECTOR_POINTS, np.array(self.baxter.get_baxter_end_effector_pose() + [0]*3), t=0)
+        sample.set(END_EFFECTOR_POINTS, np.array(self.baxter.get_baxter_end_effector_pose()), t=0)
         sample.set(END_EFFECTOR_POINT_VELOCITIES, np.array(self.baxter.get_baxter_end_effector_velocity()), t=0)
         sample.set(END_EFFECTOR_POINT_JACOBIANS, np.array(self.baxter.get_baxter_end_effector_jacobian()), t=0)
         
@@ -231,28 +241,28 @@ class AgentBaxter(Agent):
 
         
 
-        # save initial image to meta data
-        self._world[condition].plot(self._hyperparams['x0'][condition])
-        img = self._world[condition].get_image_scaled(self._hyperparams['image_width'],
-                                                      self._hyperparams['image_height'])
-        # mjcpy image shape is [height, width, channels],
-        # dim-shuffle it for later conv-net processing,
-        # and flatten for storage
-        img_data = np.transpose(img["img"], (1, 0, 2)).flatten()
-        # if initial image is an observation, replicate it for each time step
-        if CONTEXT_IMAGE in self.obs_data_types:
-            sample.set(CONTEXT_IMAGE, np.tile(img_data, (self.T, 1)), t=None)
-        else:
-            sample.set(CONTEXT_IMAGE, img_data, t=None)
-        sample.set(CONTEXT_IMAGE_SIZE, np.array([self._hyperparams['image_channels'],
-                                                self._hyperparams['image_width'],
-                                                self._hyperparams['image_height']]), t=None)
-        # only save subsequent images if image is part of observation
-        if RGB_IMAGE in self.obs_data_types:
-            sample.set(RGB_IMAGE, img_data, t=0)
-            sample.set(RGB_IMAGE_SIZE, [self._hyperparams['image_channels'],
-                                        self._hyperparams['image_width'],
-                                        self._hyperparams['image_height']], t=None)
+        # # save initial image to meta data
+        # self._world[condition].plot(self._hyperparams['x0'][condition])
+        # img = self._world[condition].get_image_scaled(self._hyperparams['image_width'],
+        #                                               self._hyperparams['image_height'])
+        # # mjcpy image shape is [height, width, channels],
+        # # dim-shuffle it for later conv-net processing,
+        # # and flatten for storage
+        # img_data = np.transpose(img["img"], (1, 0, 2)).flatten()
+        # # if initial image is an observation, replicate it for each time step
+        # if CONTEXT_IMAGE in self.obs_data_types:
+        #     sample.set(CONTEXT_IMAGE, np.tile(img_data, (self.T, 1)), t=None)
+        # else:
+        #     sample.set(CONTEXT_IMAGE, img_data, t=None)
+        # sample.set(CONTEXT_IMAGE_SIZE, np.array([self._hyperparams['image_channels'],
+        #                                         self._hyperparams['image_width'],
+        #                                         self._hyperparams['image_height']]), t=None)
+        # # only save subsequent images if image is part of observation
+        # if RGB_IMAGE in self.obs_data_types:
+        #     sample.set(RGB_IMAGE, img_data, t=0)
+        #     sample.set(RGB_IMAGE_SIZE, [self._hyperparams['image_channels'],
+        #                                 self._hyperparams['image_width'],
+        #                                 self._hyperparams['image_height']], t=None)
         return sample
 
     def _set_sample(self, sample, mj_X, t, condition):
@@ -273,7 +283,7 @@ class AgentBaxter(Agent):
         # Baxter setting joint angles and velocities
         sample.set(JOINT_ANGLES, np.array(self.baxter.get_baxter_joint_angles_positions()), t=t+1)
         sample.set(JOINT_VELOCITIES, np.array(self.baxter.get_baxter_joint_angles_velocities()), t=t+1)
-        sample.set(END_EFFECTOR_POINTS, self.baxter.get_baxter_end_effector_pose() + [0]*3, t=t+1)
+        sample.set(END_EFFECTOR_POINTS, self.baxter.get_baxter_end_effector_pose(), t=t+1)
         sample.set(END_EFFECTOR_POINT_VELOCITIES, self.baxter.get_baxter_end_effector_velocity(), t=t+1)
         sample.set(END_EFFECTOR_POINT_JACOBIANS, np.array(self.baxter.get_baxter_end_effector_jacobian()), t=t+1)
 
